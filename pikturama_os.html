@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;">
+<title>Pikturama OS</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & BASE ── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0F1419;--bg2:#161C23;--bg3:#1E2730;--bg4:#252F3A;
+  --border:#2A3540;--border2:#354450;
+  --text:#E8EDF2;--text2:#8A9BAB;--text3:#5A6B7A;
+  --accent:#4A9EBF;--accent2:#2D7A9A;
+  --green:#3DAA6A;--green2:#2A7A4A;
+  --amber:#C9850A;--amber2:#A06008;
+  --red:#C04040;--red2:#903030;
+  --purple:#7A65C9;
+  --font-mono:'IBM Plex Mono',monospace;
+  --font-disp:'Barlow Condensed',sans-serif;
+  --font-body:'Barlow',sans-serif;
+  --r:4px;--r2:6px;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px}
+
+/* ── LAYOUT ── */
+.shell{display:grid;grid-template-columns:220px 1fr;grid-template-rows:48px 1fr;height:100vh}
+.topbar{grid-column:1/-1;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1rem;gap:1rem}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.main{overflow-y:auto;background:var(--bg)}
+
+/* ── TOPBAR ── */
+.logo{font-family:var(--font-disp);font-size:20px;font-weight:700;letter-spacing:.05em;color:var(--text);display:flex;align-items:center;gap:8px}
+.logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.week-chip{font-family:var(--font-mono);font-size:11px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:3px 10px}
+.user-chip{font-size:12px;color:var(--accent);background:rgba(74,158,191,.1);border:1px solid rgba(74,158,191,.3);border-radius:var(--r);padding:3px 10px;font-family:var(--font-mono)}
+
+/* ── SIDEBAR ── */
+.sidebar-section{padding:16px 12px 4px;font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:.12em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-left:2px solid transparent;transition:all .12s;color:var(--text2);font-size:13px}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:var(--bg3);border-left-color:var(--accent);color:var(--text)}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.7}
+.nav-item.active svg{opacity:1}
+.nav-badge{margin-left:auto;font-family:var(--font-mono);font-size:10px;background:var(--bg4);border:1px solid var(--border);border-radius:3px;padding:1px 6px;color:var(--text2)}
+.nav-item.active .nav-badge{background:rgba(74,158,191,.15);border-color:rgba(74,158,191,.4);color:var(--accent)}
+.sidebar-spacer{flex:1}
+.sidebar-footer{padding:12px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;color:var(--text3)}
+
+/* ── PAGE ── */
+.page{display:none;padding:24px;min-height:100%}
+.page.active{display:block}
+.page-header{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.page-title{font-family:var(--font-disp);font-size:26px;font-weight:700;letter-spacing:.02em;color:var(--text)}
+.page-sub{font-size:12px;color:var(--text2);margin-top:3px;font-family:var(--font-mono)}
+.page-actions{display:flex;gap:8px;flex-shrink:0;align-items:center}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);font-size:12px;font-family:var(--font-mono);cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text);transition:all .12s}
+.btn:hover{background:var(--bg4);border-color:var(--border2)}
+.btn-primary{background:var(--accent2);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent)}
+.btn-success{background:var(--green2);border-color:var(--green);color:#fff}
+.btn-success:hover{background:var(--green)}
+.btn-danger{background:transparent;border-color:var(--red);color:var(--red)}
+.btn-danger:hover{background:rgba(192,64,64,.15)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-icon{padding:5px 8px;font-size:14px}
+svg.icon{width:14px;height:14px;display:inline-block;vertical-align:middle;flex-shrink:0}
+
+/* ── CARDS & GRIDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px}
+.card-sm{padding:12px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.blue::before{background:var(--accent)}
+.stat-card.green::before{background:var(--green)}
+.stat-card.amber::before{background:var(--amber)}
+.stat-card.red::before{background:var(--red)}
+.stat-card.purple::before{background:var(--purple)}
+.stat-n{font-family:var(--font-disp);font-size:28px;font-weight:700;color:var(--text);line-height:1}
+.stat-l{font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.08em}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;border-radius:var(--r2);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--bg3)}
+th{padding:10px 14px;text-align:left;font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;font-weight:500;white-space:nowrap;border-bottom:1px solid var(--border)}
+td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.td-main{color:var(--text);font-weight:500}
+.td-mono{font-family:var(--font-mono);font-size:12px}
+
+/* ── BADGES ── */
+.badge{display:inline-block;font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:3px;font-weight:500;letter-spacing:.04em}
+.badge-blue{background:rgba(74,158,191,.15);color:var(--accent);border:1px solid rgba(74,158,191,.3)}
+.badge-green{background:rgba(61,170,106,.15);color:var(--green);border:1px solid rgba(61,170,106,.3)}
+.badge-amber{background:rgba(201,133,10,.15);color:var(--amber);border:1px solid rgba(201,133,10,.3)}
+.badge-red{background:rgba(192,64,64,.15);color:var(--red);border:1px solid rgba(192,64,64,.3)}
+.badge-purple{background:rgba(122,101,201,.15);color:var(--purple);border:1px solid rgba(122,101,201,.3)}
+.badge-gray{background:rgba(138,155,171,.1);color:var(--text2);border:1px solid var(--border)}
+
+/* ── FORMS ── */
+.form-grid{display:grid;gap:12px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+label{font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+input,select,textarea{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--font-body);font-size:13px;padding:8px 10px;width:100%;transition:border .12s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+select option{background:var(--bg3)}
+textarea{resize:vertical;min-height:72px;font-family:var(--font-body)}
+.form-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;margin-bottom:16px}
+.form-section-title{font-family:var(--font-mono);font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px}
+
+/* ── MODAL ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);padding:24px;width:90%;max-width:520px;max-height:85vh;overflow-y:auto}
+.modal-title{font-family:var(--font-disp);font-size:20px;font-weight:700;margin-bottom:16px;color:var(--text)}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* ── PIN GATE ── */
+.pin-gate{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.pin-gate.open{display:flex}
+.pin-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);padding:32px;text-align:center;width:320px}
+.pin-title{font-family:var(--font-disp);font-size:22px;font-weight:700;margin-bottom:6px}
+.pin-sub{font-size:12px;color:var(--text2);font-family:var(--font-mono);margin-bottom:20px}
+.pin-input{text-align:center;font-family:var(--font-mono);font-size:24px;letter-spacing:.3em;width:100%;margin-bottom:12px}
+.pin-error{color:var(--red);font-size:12px;font-family:var(--font-mono);margin-top:8px;height:16px}
+
+/* ── MISC ── */
+.empty{text-align:center;padding:40px;color:var(--text3);font-family:var(--font-mono);font-size:12px}
+.empty-icon{font-size:32px;margin-bottom:8px;opacity:.3}
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+.tag{display:inline-block;font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:1px 7px;color:var(--text2);margin:2px}
+.stock-low{color:var(--red)}
+.stock-ok{color:var(--green)}
+.stock-warn{color:var(--amber)}
+.entry-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px}
+.entry-card-body{flex:1;min-width:0}
+.entry-card-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px}
+.entry-card-meta{font-size:11px;color:var(--text2);font-family:var(--font-mono)}
+.area-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.dot-ti{background:var(--accent)}
+.dot-co{background:var(--green)}
+.dot-in{background:var(--amber)}
+.dot-ma{background:var(--red)}
+.dot-dg{background:var(--purple)}
+.section-label{font-family:var(--font-mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin:16px 0 8px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.two-col,.three-col{grid-template-columns:1fr}}
+</style>
+  <script src="https://apis.google.com/js/api.js" onload="initGoogleAPI()"></script>
+  <script src="https://accounts.google.com/gsi/client" onload="initGIS()"></script>
+</head>
+<body>
+
+<!-- PIN GATE -->
+<div class="pin-gate" id="pinGate">
+  <div class="pin-box">
+    <div class="pin-title">🔒 Acceso restringido</div>
+    <div class="pin-sub">Módulo de reportes — solo ADMIN</div>
+    <input class="pin-input" type="password" id="pinInput" maxlength="6" placeholder="••••" onkeydown="if(event.key==='Enter')checkPin()">
+    <button class="btn btn-primary" style="width:100%" onclick="checkPin()">Entrar</button>
+    <div class="pin-error" id="pinError"></div>
+  </div>
+  <button class="btn btn-sm" onclick="closePinGate()">Cancelar</button>
+</div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal" id="modalBox">
+    <div class="modal-title" id="modalTitle">Modal</div>
+    <div id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- SHELL -->
+<div class="shell">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo"><div class="logo-dot"></div>PIKTURAMA OS</div>
+    <div class="topbar-right">
+      <div class="week-chip" id="topWeek"></div>
+      <div class="user-chip" id="topUser">SERGIO</div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">Operaciones</div>
+    <div class="nav-item active" onclick="nav('dashboard')">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="nav('inventario')">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      Inventario
+      <span class="nav-badge" id="nb-inv">0</span>
+    </div>
+    <div class="nav-item" onclick="nav('maquinas')">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      Máquinas
+      <span class="nav-badge" id="nb-maq">0</span>
+    </div>
+    <div class="nav-item" onclick="nav('proveedores')">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Proveedores
+      <span class="nav-badge" id="nb-prov">0</span>
+    </div>
+    <div class="nav-item" onclick="nav('mantenimiento')">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+      Mantenimiento
+      <span class="nav-badge" id="nb-mant">0</span>
+    </div>
+    <div class="sidebar-section">Gestión</div>
+    <div class="nav-item" onclick="nav('log')">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Log semanal
+      <span class="nav-badge" id="nb-log">0</span>
+    </div>
+    <div class="nav-item" onclick="nav('reportes')">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Reportes
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:auto;width:11px;height:11px;color:var(--text3)"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    </div>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-footer">
+      <div>v1.0 — Mayo 2026</div>
+      <div style="margin-top:4px;color:var(--text2)">Pikturama · CDMX</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div><div class="page-title">Dashboard</div><div class="page-sub" id="dash-week"></div></div>
+        <div class="page-actions">
+          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+          <button class="btn btn-sm" onclick="document.getElementById('importFile').click()">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Importar JSON
+          </button>
+          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+          <button class="btn btn-sm" onclick="document.getElementById('importFile').click()">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Importar JSON
+          </button>
+          <button class="btn btn-sm" onclick="exportAll()">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar todo
+          </button>
+        </div>
+      </div>
+      <div class="stat-grid" id="dash-stats"></div>
+      <div class="two-col">
+        <div>
+          <div class="section-label">Log reciente</div>
+          <div id="dash-log-recent"></div>
+        </div>
+        <div>
+          <div class="section-label">Mantenimiento próximo</div>
+          <div id="dash-mant-recent"></div>
+          <div class="section-label" style="margin-top:16px">Inventario crítico</div>
+          <div id="dash-inv-critical"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTARIO -->
+    <div class="page" id="page-inventario">
+      <div class="page-header">
+        <div><div class="page-title">Inventario</div><div class="page-sub">Papeles + Insumos HP Indigo 7900</div></div>
+        <div class="page-actions">
+          <select id="inv-filter-tipo" style="font-size:12px;padding:6px 10px" onchange="renderInv()">
+            <option value="">Todos los tipos</option>
+            <option value="papel">Papeles</option>
+            <option value="insumo">Insumos HP</option>
+            <option value="consumible">Consumible</option>
+            <option value="otro">Otro</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="openModal('inv')">+ Nuevo ítem</button>
+        </div>
+      </div>
+      <div class="stat-grid" id="inv-stats"></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>Código</th><th>Sustrato / Producto</th><th>Tipo</th>
+          <th>Stock</th><th>Mín</th><th>Unidad</th><th>Proveedor</th><th>Último mvto</th><th></th>
+        </tr></thead>
+        <tbody id="inv-tbody"></tbody>
+      </table></div>
+    </div>
+
+    <!-- MÁQUINAS -->
+    <div class="page" id="page-maquinas">
+      <div class="page-header">
+        <div><div class="page-title">Máquinas y equipos</div><div class="page-sub">Registro de equipos activos en ambas plantas</div></div>
+        <div class="page-actions">
+          <button class="btn btn-primary btn-sm" onclick="openModal('maq')">+ Nueva máquina</button>
+        </div>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>Código</th><th>Nombre</th><th>Tipo</th><th>Planta</th>
+          <th>Responsable</th><th>Estado</th><th>Serie / Modelo</th><th></th>
+        </tr></thead>
+        <tbody id="maq-tbody"></tbody>
+      </table></div>
+    </div>
+
+    <!-- PROVEEDORES -->
+    <div class="page" id="page-proveedores">
+      <div class="page-header">
+        <div><div class="page-title">Proveedores</div><div class="page-sub">Directorio de proveedores activos</div></div>
+        <div class="page-actions">
+          <button class="btn btn-primary btn-sm" onclick="openModal('prov')">+ Nuevo proveedor</button>
+        </div>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>Nombre</th><th>Categoría</th><th>Contacto</th><th>Teléfono / Email</th><th>Notas</th><th></th>
+        </tr></thead>
+        <tbody id="prov-tbody"></tbody>
+      </table></div>
+    </div>
+
+    <!-- MANTENIMIENTO -->
+    <div class="page" id="page-mantenimiento">
+      <div class="page-header">
+        <div><div class="page-title">Mantenimiento</div><div class="page-sub">Historial y programación de servicios</div></div>
+        <div class="page-actions">
+          <button class="btn btn-primary btn-sm" onclick="openModal('mant')">+ Registrar servicio</button>
+        </div>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>Fecha</th><th>Máquina</th><th>Tipo</th><th>Descripción</th>
+          <th>Técnico / Empresa</th><th>Costo</th><th>Estado</th><th></th>
+        </tr></thead>
+        <tbody id="mant-tbody"></tbody>
+      </table></div>
+    </div>
+
+    <!-- LOG SEMANAL -->
+    <div class="page" id="page-log">
+      <div class="page-header">
+        <div><div class="page-title">Log semanal</div><div class="page-sub" id="log-week-label"></div></div>
+        <div class="page-actions">
+          <select id="log-filter" style="font-size:12px;padding:6px 10px" onchange="renderLog()">
+            <option value="">Todas las áreas</option>
+            <option value="ti">TI e infraestructura</option>
+            <option value="co">Compras</option>
+            <option value="in">Inventario</option>
+            <option value="ma">Instalaciones</option>
+            <option value="dg">Dirección General</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="openModal('log')">+ Nueva entrada</button>
+        </div>
+      </div>
+      <div class="stat-grid" id="log-stats"></div>
+      <div id="log-list"></div>
+    </div>
+
+    <!-- REPORTES (PIN) -->
+    <div class="page" id="page-reportes">
+      <div class="page-header">
+        <div><div class="page-title">Reportes</div><div class="page-sub">Generación semanal y mensual — acceso restringido</div></div>
+        <div class="page-actions">
+          <button class="btn btn-success btn-sm" onclick="genReporteSemanal()">↓ Reporte semanal</button>
+          <button class="btn btn-sm" onclick="genReporteMensual()">↓ Reporte mensual</button>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="form-section-title">Vista previa — semana actual</div>
+          <div id="rep-preview-semanal" style="font-size:13px;color:var(--text2);line-height:1.7"></div>
+        </div>
+        <div class="card">
+          <div class="form-section-title">Resumen estadístico</div>
+          <div id="rep-stats"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<script>
+// ── DATA LAYER ──
+const DB_KEY = 'pik_os_v1';
+let DB = load();
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(DB_KEY)) || fresh(); } catch(e) { return fresh(); }
+}
+function fresh() {
+  return {
+    inv: [], maq: [], prov: [], mant: [], log: [],
+    meta: { created: new Date().toISOString() }
+  };
+}
+function save() {
+  try { localStorage.setItem(DB_KEY, JSON.stringify(DB)); } catch(e) {}
+}
+
+// ── UTILS ──
+const uid = () => Math.random().toString(36).slice(2,8).toUpperCase();
+const now = () => new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+const nowFull = () => new Date().toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+function getWeek() {
+  const d = new Date(), s = new Date(d);
+  s.setDate(d.getDate() - d.getDay() + 1);
+  const e = new Date(s); e.setDate(s.getDate()+6);
+  const f = x => x.toLocaleDateString('es-MX',{day:'2-digit',month:'short'});
+  return `Semana ${f(s)} – ${f(e)} ${d.getFullYear()}`;
+}
+function getMonthLabel() {
+  return new Date().toLocaleDateString('es-MX',{month:'long',year:'numeric'});
+}
+function isThisWeek(dateStr) {
+  if (!dateStr) return false;
+  // Simple check: if the entry has ts from this week
+  const d = new Date(), s = new Date(d);
+  s.setDate(d.getDate() - d.getDay() + 1); s.setHours(0,0,0,0);
+  const e = new Date(s); e.setDate(s.getDate()+7);
+  // We store ts as locale string, just check if it exists (for now all entries count as this week)
+  return true;
+}
+function isThisMonth(dateStr) { return true; }
+
+const AREA_LABELS = { ti:'TI e infraestructura', co:'Compras', in:'Inventario', ma:'Instalaciones', dg:'Dirección General' };
+const AREA_COLORS = { ti:'badge-blue', co:'badge-green', in:'badge-amber', ma:'badge-red', dg:'badge-purple' };
+const AREA_DOTS = { ti:'dot-ti', co:'dot-co', in:'dot-in', ma:'dot-ma', dg:'dot-dg' };
+
+// ── NAVIGATION ──
+let currentPage = 'dashboard';
+let reportesUnlocked = false;
+const PIN = '1234'; // Cambiar PIN aquí
+
+function nav(page) {
+  if (page === 'reportes' && !reportesUnlocked) {
+    document.getElementById('pinGate').classList.add('open');
+    document.getElementById('pinInput').focus();
+    window._pendingPage = 'reportes';
+    return;
+  }
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const navMap = { dashboard:0, inventario:1, maquinas:2, proveedores:3, mantenimiento:4, log:5, reportes:6 };
+  document.querySelectorAll('.nav-item')[navMap[page]]?.classList.add('active');
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-'+page)?.classList.add('active');
+  renderPage(page);
+}
+
+function checkPin() {
+  const val = document.getElementById('pinInput').value;
+  if (val === PIN) {
+    reportesUnlocked = true;
+    document.getElementById('pinGate').classList.remove('open');
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinError').textContent = '';
+    nav(window._pendingPage || 'reportes');
+  } else {
+    document.getElementById('pinError').textContent = 'PIN incorrecto';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinInput').focus();
+  }
+}
+function closePinGate() {
+  document.getElementById('pinGate').classList.remove('open');
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinError').textContent = '';
+}
+
+// ── MODAL ──
+let modalType = null;
+let editId = null;
+
+function openModal(type, id) {
+  modalType = type; editId = id || null;
+  const M = { inv:'inventario', maq:'máquina', prov:'proveedor', mant:'servicio de mantenimiento', log:'entrada de log' };
+  document.getElementById('modalTitle').textContent = (id ? 'Editar' : 'Nuevo') + ' ' + M[type];
+  document.getElementById('modalBody').innerHTML = buildForm(type, id);
+  document.getElementById('modalFooter').innerHTML = `
+    <button class="btn btn-sm" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary btn-sm" onclick="saveModal()">Guardar</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  modalType = null; editId = null;
+}
+document.getElementById('modal').addEventListener('click', e => { if(e.target===document.getElementById('modal')) closeModal(); });
+
+function buildForm(type, id) {
+  let d = {};
+  if (id) {
+    const arr = DB[{inv:'inv',maq:'maq',prov:'prov',mant:'mant',log:'log'}[type]];
+    d = arr.find(x=>x.id===id) || {};
+  }
+  const v = (k,def='') => d[k]!==undefined ? String(d[k]).replace(/"/g,'&quot;') : def;
+  const sel = (k,opts,def='') => opts.map(o=>`<option value="${o}" ${v(k,def)===o?'selected':''}>${o}</option>`).join('');
+
+  if (type === 'inv') return `
+    <div class="form-grid">
+      <div class="form-row">
+        <div class="field"><label>Código</label><input id="f-codigo" value="${v('codigo')}" placeholder="ej. P0001"></div>
+        <div class="field"><label>Tipo</label><select id="f-tipo"><option value="">—</option>${sel('tipo',['papel','insumo HP','consumible','otro'])}</select></div>
+      </div>
+      <div class="field"><label>Nombre / Sustrato</label><input id="f-nombre" value="${v('nombre')}" placeholder="ej. Couché mate 200gr"></div>
+      <div class="form-row3">
+        <div class="field"><label>Stock actual</label><input id="f-stock" type="number" value="${v('stock','0')}"></div>
+        <div class="field"><label>Stock mínimo</label><input id="f-min" type="number" value="${v('min','0')}"></div>
+        <div class="field"><label>Unidad</label><select id="f-unidad"><option value="">—</option>${sel('unidad',['tabloides','pliegos','piezas','litros','kg'])}</select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Proveedor</label><input id="f-proveedor" value="${v('proveedor')}" placeholder="ej. Papel S.A., SUN DIGITAL"></div>
+        <div class="field"><label>Costo unitario (MXN)</label><input id="f-costo" value="${v('costo')}" placeholder="ej. 3.34"></div>
+      </div>
+      <div class="field"><label>Notas</label><textarea id="f-notas">${v('notas')}</textarea></div>
+    </div>`;
+
+  if (type === 'maq') return `
+    <div class="form-grid">
+      <div class="form-row">
+        <div class="field"><label>Código</label><input id="f-codigo" value="${v('codigo')}" placeholder="ej. MAQ-001"></div>
+        <div class="field"><label>Planta</label><select id="f-planta"><option value="">—</option>${sel('planta',['Saratoga','San Francisco','Administración'])}</select></div>
+      </div>
+      <div class="field"><label>Nombre</label><input id="f-nombre" value="${v('nombre')}" placeholder="ej. HP Indigo 7900"></div>
+      <div class="form-row">
+        <div class="field"><label>Tipo</label><select id="f-tipo"><option value="">—</option>${sel('tipo',['Prensa digital','Prensa offset','Acabados','CTP','Corte','TI','Otro'])}</select></div>
+        <div class="field"><label>Estado</label><select id="f-estado"><option value="">—</option>${sel('estado',['Activo','Mantenimiento','Fuera de servicio','Vendido'])}</select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Responsable</label><input id="f-responsable" value="${v('responsable')}" placeholder="ej. Juan Pacheco"></div>
+        <div class="field"><label>Serie / Modelo</label><input id="f-serie" value="${v('serie')}" placeholder="ej. L10-2327"></div>
+      </div>
+      <div class="field"><label>Notas</label><textarea id="f-notas">${v('notas')}</textarea></div>
+    </div>`;
+
+  if (type === 'prov') return `
+    <div class="form-grid">
+      <div class="field"><label>Nombre</label><input id="f-nombre" value="${v('nombre')}" placeholder="ej. SUN DIGITAL"></div>
+      <div class="form-row">
+        <div class="field"><label>Categoría</label><select id="f-categoria"><option value="">—</option>${sel('categoria',['Papelería','Insumos digitales','TI','Mantenimiento','Servicios','Equipo','Otro'])}</select></div>
+        <div class="field"><label>Contacto</label><input id="f-contacto" value="${v('contacto')}" placeholder="Nombre del contacto"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Teléfono</label><input id="f-tel" value="${v('tel')}"></div>
+        <div class="field"><label>Email</label><input id="f-email" value="${v('email')}"></div>
+      </div>
+      <div class="field"><label>Notas</label><textarea id="f-notas">${v('notas')}</textarea></div>
+    </div>`;
+
+  if (type === 'mant') return `
+    <div class="form-grid">
+      <div class="form-row">
+        <div class="field"><label>Fecha</label><input id="f-fecha" type="date" value="${v('fecha')}"></div>
+        <div class="field"><label>Máquina</label><select id="f-maquina"><option value="">— Seleccionar —</option>${DB.maq.map(m=>`<option value="${m.id}" ${v('maquina')===m.id?'selected':''}>${m.nombre}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Tipo</label><select id="f-tipo"><option value="">—</option>${sel('tipo',['Preventivo','Correctivo','Calibración','Limpieza','Inspección'])}</select></div>
+        <div class="field"><label>Estado</label><select id="f-estado"><option value="">—</option>${sel('estado',['Programado','En curso','Completado','Cancelado'])}</select></div>
+      </div>
+      <div class="field"><label>Descripción</label><textarea id="f-desc">${v('desc')}</textarea></div>
+      <div class="form-row">
+        <div class="field"><label>Técnico / Empresa</label><input id="f-tecnico" value="${v('tecnico')}"></div>
+        <div class="field"><label>Costo (MXN)</label><input id="f-costo" value="${v('costo')}" placeholder="ej. 4500"></div>
+      </div>
+    </div>`;
+
+  if (type === 'log') return `
+    <div class="form-grid">
+      <div class="form-row">
+        <div class="field"><label>Área</label><select id="f-area"><option value="">—</option>${sel('area',['ti','co','in','ma','dg'])}</select></div>
+        <div class="field"><label>Fecha</label><input id="f-fecha" type="date" value="${v('fecha',new Date().toISOString().slice(0,10))}"></div>
+      </div>
+      <div class="field"><label>Descripción / ¿Qué se hizo?</label><textarea id="f-desc">${v('desc')}</textarea></div>
+      <div class="field"><label>Detalle adicional (resultado, proveedor, solicitante...)</label><input id="f-detalle" value="${v('detalle')}"></div>
+      <div class="form-row">
+        <div class="field"><label>Estado</label><select id="f-estado"><option value="">—</option>${sel('estado',['Completado','Pendiente','En curso','Escalado'])}</select></div>
+        <div class="field"><label>Tiempo / Costo</label><input id="f-tiempo" value="${v('tiempo')}" placeholder="ej. 2 hrs, $500"></div>
+      </div>
+    </div>`;
+}
+
+function saveModal() {
+  const G = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  let item = { id: editId || uid(), ts: nowFull() };
+
+  if (modalType === 'inv') {
+    if (!G('f-nombre')) { alert('El nombre es obligatorio'); return; }
+    Object.assign(item, { codigo:G('f-codigo'), nombre:G('f-nombre'), tipo:G('f-tipo'), stock:parseFloat(G('f-stock'))||0, min:parseFloat(G('f-min'))||0, unidad:G('f-unidad'), proveedor:G('f-proveedor'), costo:G('f-costo'), notas:G('f-notas') });
+    upsert('inv', item);
+  } else if (modalType === 'maq') {
+    if (!G('f-nombre')) { alert('El nombre es obligatorio'); return; }
+    Object.assign(item, { codigo:G('f-codigo'), nombre:G('f-nombre'), tipo:G('f-tipo'), planta:G('f-planta'), estado:G('f-estado'), responsable:G('f-responsable'), serie:G('f-serie'), notas:G('f-notas') });
+    upsert('maq', item);
+  } else if (modalType === 'prov') {
+    if (!G('f-nombre')) { alert('El nombre es obligatorio'); return; }
+    Object.assign(item, { nombre:G('f-nombre'), categoria:G('f-categoria'), contacto:G('f-contacto'), tel:G('f-tel'), email:G('f-email'), notas:G('f-notas') });
+    upsert('prov', item);
+  } else if (modalType === 'mant') {
+    Object.assign(item, { fecha:G('f-fecha'), maquina:G('f-maquina'), tipo:G('f-tipo'), estado:G('f-estado'), desc:G('f-desc'), tecnico:G('f-tecnico'), costo:G('f-costo') });
+    upsert('mant', item);
+  } else if (modalType === 'log') {
+    if (!G('f-desc')) { alert('La descripción es obligatoria'); return; }
+    Object.assign(item, { area:G('f-area'), fecha:G('f-fecha'), desc:G('f-desc'), detalle:G('f-detalle'), estado:G('f-estado'), tiempo:G('f-tiempo') });
+    upsert('log', item);
+  }
+
+  save(); closeModal(); renderPage(currentPage); updateBadges();
+}
+
+function upsert(col, item) {
+  const idx = DB[col].findIndex(x => x.id === item.id);
+  if (idx >= 0) DB[col][idx] = item; else DB[col].push(item);
+}
+
+function deleteItem(col, id) {
+  if (!confirm('¿Eliminar este registro?')) return;
+  DB[col] = DB[col].filter(x => x.id !== id);
+  save(); renderPage(currentPage); updateBadges();
+}
+
+function editItem(col, id) { openModal(col.slice(0,col==='log'?3:3), id); }
+
+// ── RENDER PAGES ──
+function renderPage(p) {
+  if (p === 'dashboard') renderDash();
+  else if (p === 'inventario') renderInv();
+  else if (p === 'maquinas') renderMaq();
+  else if (p === 'proveedores') renderProv();
+  else if (p === 'mantenimiento') renderMant();
+  else if (p === 'log') renderLog();
+  else if (p === 'reportes') renderReportes();
+}
+
+function getBadgeHtml(cls, text) { return `<span class="badge ${cls}">${text}</span>`; }
+
+// DASHBOARD
+function renderDash() {
+  document.getElementById('dash-week').textContent = getWeek();
+  const invCrit = DB.inv.filter(x => x.stock <= x.min && x.min > 0).length;
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="stat-card blue"><div class="stat-n">${DB.inv.length}</div><div class="stat-l">Ítems inventario</div></div>
+    <div class="stat-card amber"><div class="stat-n">${invCrit}</div><div class="stat-l">Stock crítico</div></div>
+    <div class="stat-card green"><div class="stat-n">${DB.maq.length}</div><div class="stat-l">Máquinas</div></div>
+    <div class="stat-card purple"><div class="stat-n">${DB.mant.filter(x=>x.estado==='Programado').length}</div><div class="stat-l">Mant. programado</div></div>
+    <div class="stat-card blue"><div class="stat-n">${DB.log.length}</div><div class="stat-l">Entradas log</div></div>
+    <div class="stat-card green"><div class="stat-n">${DB.prov.length}</div><div class="stat-l">Proveedores</div></div>`;
+  const recentLog = DB.log.slice(-5).reverse();
+  document.getElementById('dash-log-recent').innerHTML = recentLog.length
+    ? recentLog.map(e => `<div class="entry-card"><div class="area-dot ${AREA_DOTS[e.area]||'dot-ti'}"></div><div class="entry-card-body"><div class="entry-card-title">${e.desc||'—'}</div><div class="entry-card-meta">${AREA_LABELS[e.area]||e.area} · ${e.ts||''}</div></div></div>`).join('')
+    : '<div class="empty"><div class="empty-icon">📋</div>Sin entradas en log</div>';
+  const critInv = DB.inv.filter(x=>x.stock<=x.min&&x.min>0).slice(0,4);
+  document.getElementById('dash-inv-critical').innerHTML = critInv.length
+    ? critInv.map(x=>`<div class="entry-card"><div class="entry-card-body"><div class="entry-card-title stock-low">${x.nombre}</div><div class="entry-card-meta">Stock: ${x.stock} ${x.unidad||''} · Mín: ${x.min}</div></div></div>`).join('')
+    : '<div class="empty" style="padding:12px"><div class="empty-icon">✓</div>Sin alertas</div>';
+  const proxMant = DB.mant.filter(x=>x.estado==='Programado').slice(0,3);
+  document.getElementById('dash-mant-recent').innerHTML = proxMant.length
+    ? proxMant.map(x=>`<div class="entry-card"><div class="entry-card-body"><div class="entry-card-title">${DB.maq.find(m=>m.id===x.maquina)?.nombre||x.maquina||'—'}</div><div class="entry-card-meta">${x.tipo||''} · ${x.fecha||''}</div></div></div>`).join('')
+    : '<div class="empty" style="padding:12px"><div class="empty-icon">🔧</div>Sin pendientes</div>';
+}
+
+// INVENTARIO
+function renderInv() {
+  const filter = document.getElementById('inv-filter-tipo')?.value || '';
+  const items = DB.inv.filter(x => !filter || x.tipo === filter);
+  const total = DB.inv.length;
+  const crit = DB.inv.filter(x=>x.stock<=x.min&&x.min>0).length;
+  const ok = DB.inv.filter(x=>x.stock>x.min||x.min===0).length;
+  document.getElementById('inv-stats').innerHTML = `
+    <div class="stat-card blue"><div class="stat-n">${total}</div><div class="stat-l">Total ítems</div></div>
+    <div class="stat-card red"><div class="stat-n">${crit}</div><div class="stat-l">Stock crítico</div></div>
+    <div class="stat-card green"><div class="stat-n">${ok}</div><div class="stat-l">En nivel</div></div>
+    <div class="stat-card amber"><div class="stat-n">${DB.inv.filter(x=>x.tipo==='papel').length}</div><div class="stat-l">Papeles</div></div>
+    <div class="stat-card purple"><div class="stat-n">${DB.inv.filter(x=>x.tipo==='insumo HP').length}</div><div class="stat-l">Insumos HP</div></div>`;
+  if (!items.length) {
+    document.getElementById('inv-tbody').innerHTML = `<tr><td colspan="9"><div class="empty"><div class="empty-icon">📦</div>Sin ítems. Agrega el primero.</div></td></tr>`;
+    return;
+  }
+  document.getElementById('inv-tbody').innerHTML = items.map(x => {
+    const stockClass = x.min > 0 ? (x.stock <= x.min ? 'stock-low' : x.stock <= x.min*1.5 ? 'stock-warn' : 'stock-ok') : '';
+    const tipoBadge = { papel:'badge-blue', 'insumo HP':'badge-purple', consumible:'badge-amber', otro:'badge-gray' }[x.tipo] || 'badge-gray';
+    return `<tr>
+      <td class="td-mono">${x.codigo||'—'}</td>
+      <td class="td-main">${x.nombre}</td>
+      <td>${getBadgeHtml(tipoBadge, x.tipo||'—')}</td>
+      <td class="${stockClass} td-mono">${x.stock} ${x.unidad||''}</td>
+      <td class="td-mono">${x.min||'—'}</td>
+      <td>${x.unidad||'—'}</td>
+      <td>${x.proveedor||'—'}</td>
+      <td class="td-mono" style="font-size:11px">${x.ts||'—'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-icon" onclick="openModal('inv','${x.id}')" title="Editar">✏️</button>
+        <button class="btn btn-sm btn-icon btn-danger" onclick="deleteItem('inv','${x.id}')" title="Eliminar">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// MÁQUINAS
+function renderMaq() {
+  document.getElementById('maq-tbody').innerHTML = !DB.maq.length
+    ? `<tr><td colspan="8"><div class="empty"><div class="empty-icon">⚙️</div>Sin máquinas registradas.</div></td></tr>`
+    : DB.maq.map(x => {
+      const estBadge = {Activo:'badge-green','Mantenimiento':'badge-amber','Fuera de servicio':'badge-red',Vendido:'badge-gray'}[x.estado]||'badge-gray';
+      return `<tr>
+        <td class="td-mono">${x.codigo||'—'}</td>
+        <td class="td-main">${x.nombre}</td>
+        <td>${x.tipo||'—'}</td>
+        <td>${getBadgeHtml('badge-blue',x.planta||'—')}</td>
+        <td>${x.responsable||'—'}</td>
+        <td>${getBadgeHtml(estBadge,x.estado||'—')}</td>
+        <td class="td-mono" style="font-size:11px">${x.serie||'—'}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-sm btn-icon" onclick="openModal('maq','${x.id}')" title="Editar">✏️</button>
+          <button class="btn btn-sm btn-icon btn-danger" onclick="deleteItem('maq','${x.id}')" title="Eliminar">✕</button>
+        </td>
+      </tr>`;
+    }).join('');
+}
+
+// PROVEEDORES
+function renderProv() {
+  document.getElementById('prov-tbody').innerHTML = !DB.prov.length
+    ? `<tr><td colspan="6"><div class="empty"><div class="empty-icon">🤝</div>Sin proveedores registrados.</div></td></tr>`
+    : DB.prov.map(x => `<tr>
+      <td class="td-main">${x.nombre}</td>
+      <td>${getBadgeHtml('badge-blue',x.categoria||'—')}</td>
+      <td>${x.contacto||'—'}</td>
+      <td class="td-mono" style="font-size:11px">${[x.tel,x.email].filter(Boolean).join(' · ')||'—'}</td>
+      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x.notas||'—'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-icon" onclick="openModal('prov','${x.id}')" title="Editar">✏️</button>
+        <button class="btn btn-sm btn-icon btn-danger" onclick="deleteItem('prov','${x.id}')" title="Eliminar">✕</button>
+      </td>
+    </tr>`).join('');
+}
+
+// MANTENIMIENTO
+function renderMant() {
+  document.getElementById('mant-tbody').innerHTML = !DB.mant.length
+    ? `<tr><td colspan="8"><div class="empty"><div class="empty-icon">🔧</div>Sin servicios registrados.</div></td></tr>`
+    : DB.mant.map(x => {
+      const estBadge = {Completado:'badge-green','En curso':'badge-amber',Programado:'badge-blue',Cancelado:'badge-gray'}[x.estado]||'badge-gray';
+      const maqNombre = DB.maq.find(m=>m.id===x.maquina)?.nombre || x.maquina || '—';
+      return `<tr>
+        <td class="td-mono">${x.fecha||'—'}</td>
+        <td class="td-main">${maqNombre}</td>
+        <td>${getBadgeHtml('badge-purple',x.tipo||'—')}</td>
+        <td style="max-width:180px">${x.desc||'—'}</td>
+        <td>${x.tecnico||'—'}</td>
+        <td class="td-mono">${x.costo?'$'+parseFloat(x.costo).toLocaleString('es-MX'):'—'}</td>
+        <td>${getBadgeHtml(estBadge,x.estado||'—')}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-sm btn-icon" onclick="openModal('mant','${x.id}')" title="Editar">✏️</button>
+          <button class="btn btn-sm btn-icon btn-danger" onclick="deleteItem('mant','${x.id}')" title="Eliminar">✕</button>
+        </td>
+      </tr>`;
+    }).join('');
+}
+
+// LOG
+function renderLog() {
+  document.getElementById('log-week-label').textContent = getWeek();
+  const filter = document.getElementById('log-filter')?.value || '';
+  const items = DB.log.filter(x => !filter || x.area === filter).slice().reverse();
+  const counts = {};
+  ['ti','co','in','ma','dg'].forEach(a => counts[a] = DB.log.filter(x=>x.area===a).length);
+  document.getElementById('log-stats').innerHTML = `
+    <div class="stat-card blue"><div class="stat-n">${DB.log.length}</div><div class="stat-l">Total entradas</div></div>
+    <div class="stat-card blue"><div class="stat-n">${counts.ti}</div><div class="stat-l">TI</div></div>
+    <div class="stat-card green"><div class="stat-n">${counts.co}</div><div class="stat-l">Compras</div></div>
+    <div class="stat-card amber"><div class="stat-n">${counts.in}</div><div class="stat-l">Inventario</div></div>
+    <div class="stat-card red"><div class="stat-n">${counts.ma}</div><div class="stat-l">Instalaciones</div></div>
+    <div class="stat-card purple"><div class="stat-n">${counts.dg}</div><div class="stat-l">Dirección</div></div>`;
+  if (!items.length) {
+    document.getElementById('log-list').innerHTML = '<div class="empty"><div class="empty-icon">📋</div>Sin entradas. Agrega la primera actividad de la semana.</div>';
+    return;
+  }
+  document.getElementById('log-list').innerHTML = items.map(x => {
+    const estBadge = {Completado:'badge-green','En curso':'badge-amber',Pendiente:'badge-red',Escalado:'badge-purple'}[x.estado]||'badge-gray';
+    return `<div class="entry-card">
+      <div class="area-dot ${AREA_DOTS[x.area]||'dot-ti'}" style="margin-top:4px"></div>
+      <div class="entry-card-body">
+        <div class="entry-card-title">${x.desc||'—'}</div>
+        <div class="entry-card-meta" style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <span>${getBadgeHtml(AREA_COLORS[x.area]||'badge-gray', AREA_LABELS[x.area]||x.area||'—')}</span>
+          ${x.estado?getBadgeHtml(estBadge,x.estado):''}
+          ${x.tiempo?`<span class="badge badge-gray">${x.tiempo}</span>`:''}
+          ${x.detalle?`<span style="color:var(--text2)">${x.detalle}</span>`:''}
+          <span style="margin-left:auto;font-size:11px;color:var(--text3)">${x.fecha||x.ts||''}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button class="btn btn-sm btn-icon" onclick="openModal('log','${x.id}')" title="Editar">✏️</button>
+        <button class="btn btn-sm btn-icon btn-danger" onclick="deleteItem('log','${x.id}')" title="Eliminar">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// REPORTES
+function renderReportes() {
+  const byArea = area => DB.log.filter(x=>x.area===area);
+  let html = `<p style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-bottom:12px">${getWeek()}</p>`;
+  Object.entries(AREA_LABELS).forEach(([k,label]) => {
+    const items = byArea(k);
+    if (!items.length) return;
+    html += `<p style="font-size:12px;font-weight:500;color:var(--text);margin:.75rem 0 .25rem">${label} (${items.length})</p>`;
+    items.forEach(e => {
+      html += `<p style="padding-left:.75rem;border-left:2px solid var(--border2);margin:.15rem 0;font-size:12px;color:var(--text2)">— ${e.desc||''}${e.detalle?' · '+e.detalle:''}</p>`;
+    });
+  });
+  if (!DB.log.length) html = '<div class="empty"><div class="empty-icon">📊</div>Sin datos en log esta semana.</div>';
+  document.getElementById('rep-preview-semanal').innerHTML = html;
+
+  const invCrit = DB.inv.filter(x=>x.stock<=x.min&&x.min>0).length;
+  document.getElementById('rep-stats').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Entradas log total</span><span class="td-mono">${DB.log.length}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Ítems inventario</span><span class="td-mono">${DB.inv.length}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Stock crítico</span><span class="td-mono ${invCrit>0?'stock-low':''}">${invCrit}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Máquinas activas</span><span class="td-mono">${DB.maq.filter(x=>x.estado==='Activo').length}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Mant. programado</span><span class="td-mono">${DB.mant.filter(x=>x.estado==='Programado').length}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Proveedores</span><span class="td-mono">${DB.prov.length}</span></div>
+    </div>`;
+}
+
+function genReporteSemanal() {
+  let txt = `REPORTE SEMANAL — PIKTURAMA\n${getWeek()}\nElaborado por: Sergio Flores Felici\n${'═'.repeat(52)}\n\n`;
+  Object.entries(AREA_LABELS).forEach(([k,label]) => {
+    const items = DB.log.filter(x=>x.area===k);
+    if (!items.length) return;
+    txt += `${label.toUpperCase()} (${items.length} registro${items.length!==1?'s':''})\n${'─'.repeat(40)}\n`;
+    items.forEach(e => {
+      txt += `  • ${e.desc||''}`;
+      if (e.detalle) txt += `\n    → ${e.detalle}`;
+      if (e.estado) txt += `  [${e.estado}]`;
+      if (e.tiempo) txt += `  (${e.tiempo})`;
+      txt += '\n';
+    });
+    txt += '\n';
+  });
+  const invCrit = DB.inv.filter(x=>x.stock<=x.min&&x.min>0);
+  if (invCrit.length) {
+    txt += `ALERTAS DE INVENTARIO\n${'─'.repeat(40)}\n`;
+    invCrit.forEach(x => txt += `  ⚠ ${x.nombre} — Stock: ${x.stock} ${x.unidad||''} / Mín: ${x.min}\n`);
+    txt += '\n';
+  }
+  txt += `${'═'.repeat(52)}\nTotal actividades registradas: ${DB.log.length}\nGenerado: ${nowFull()}\n`;
+  download(txt, `pikturama_semanal_${new Date().toISOString().slice(0,10)}.txt`);
+}
+
+function genReporteMensual() {
+  let txt = `REPORTE MENSUAL — PIKTURAMA\n${getMonthLabel()}\nElaborado por: Sergio Flores Felici\n${'═'.repeat(52)}\n\n`;
+  txt += `RESUMEN EJECUTIVO\n${'─'.repeat(40)}\n`;
+  txt += `Entradas log: ${DB.log.length}\nÍtems inventario: ${DB.inv.length}\nStock crítico: ${DB.inv.filter(x=>x.stock<=x.min&&x.min>0).length}\nMáquinas activas: ${DB.maq.filter(x=>x.estado==='Activo').length}\nProveedores: ${DB.prov.length}\n\n`;
+  txt += `ACTIVIDADES POR ÁREA\n${'─'.repeat(40)}\n`;
+  Object.entries(AREA_LABELS).forEach(([k,label]) => {
+    txt += `${label}: ${DB.log.filter(x=>x.area===k).length} registros\n`;
+  });
+  txt += `\nGenerado: ${nowFull()}\n`;
+  download(txt, `pikturama_mensual_${new Date().toISOString().slice(0,7)}.txt`);
+}
+
+function download(content, filename) {
+  const blob = new Blob([content], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.inv && !data.maq && !data.log) { alert("Archivo JSON no válido para Pikturama OS"); return; }
+      const msg = `Importar datos:\n• ${(data.inv||[]).length} ítems inventario\n• ${(data.maq||[]).length} máquinas\n• ${(data.prov||[]).length} proveedores\n• ${(data.mant||[]).length} mantenimientos\n• ${(data.log||[]).length} entradas log\n\n¿Reemplazar datos actuales?`;
+      if (!confirm(msg)) return;
+      DB.inv = data.inv || [];
+      DB.maq = data.maq || [];
+      DB.prov = data.prov || [];
+      DB.mant = data.mant || [];
+      DB.log = data.log || [];
+      save(); updateBadges(); renderPage(currentPage);
+      alert("Datos importados correctamente");
+    } catch(err) { alert("Error al leer el archivo: " + err.message); }
+  };
+  reader.readAsText(file);
+  event.target.value = "";
+}
+
+function exportAll() {
+  const blob = new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`pikturama_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function updateBadges() {
+  document.getElementById('nb-inv').textContent = DB.inv.length;
+  document.getElementById('nb-maq').textContent = DB.maq.length;
+  document.getElementById('nb-prov').textContent = DB.prov.length;
+  document.getElementById('nb-mant').textContent = DB.mant.length;
+  document.getElementById('nb-log').textContent = DB.log.length;
+}
+
+
+// ── GOOGLE SHEETS INTEGRATION ──
+const GOOG_CLIENT_ID = '272557579042-lsfhf7sf40rd1vimpttk59klrnl4juk7.apps.googleusercontent.com';
+const SHEET_PAPELES = '11nnfWxodzEPXsm0JzWFNYx7fXkNMsCuBJsYq5r0aNwg';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+
+let gapi_ready = false;
+let gis_ready = false;
+let token_client = null;
+let access_token = null;
+
+function initGoogleAPI() {
+  gapi.load('client', async () => {
+    await gapi.client.init({ discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'] });
+    gapi_ready = true;
+    checkGoogleReady();
+  });
+}
+
+function initGIS() {
+  token_client = google.accounts.oauth2.initTokenClient({
+    client_id: GOOG_CLIENT_ID,
+    scope: SCOPES,
+    callback: (resp) => {
+      if (resp.error) { console.error(resp); return; }
+      access_token = resp.access_token;
+      gapi.client.setToken({ access_token });
+      updateGoogleBtn(true);
+      syncFromSheets();
+    }
+  });
+  gis_ready = true;
+  checkGoogleReady();
+}
+
+function checkGoogleReady() {
+  if (gapi_ready && gis_ready) {
+    document.getElementById('btn-google').disabled = false;
+    document.getElementById('btn-google').textContent = 'Conectar Google Sheets';
+  }
+}
+
+function connectGoogle() {
+  if (access_token) {
+    disconnectGoogle();
+    return;
+  }
+  token_client.requestAccessToken({ prompt: 'consent' });
+}
+
+function disconnectGoogle() {
+  google.accounts.oauth2.revoke(access_token, () => {});
+  access_token = null;
+  gapi.client.setToken(null);
+  updateGoogleBtn(false);
+}
+
+function updateGoogleBtn(connected) {
+  const btn = document.getElementById('btn-google');
+  if (connected) {
+    btn.textContent = '✓ Sheets conectado';
+    btn.style.background = 'rgba(61,170,106,.2)';
+    btn.style.borderColor = 'rgba(61,170,106,.5)';
+    btn.style.color = '#3DAA6A';
+  } else {
+    btn.textContent = 'Conectar Google Sheets';
+    btn.style.background = '';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
+}
+
+async function syncFromSheets() {
+  if (!access_token) { alert('Primero conecta Google Sheets'); return; }
+  const btn = document.getElementById('btn-sync');
+  btn.textContent = 'Sincronizando...';
+  btn.disabled = true;
+  try {
+    // Read STOCK sheet (tab "STOCK" col A=codigo, B=sustrato, C=stock_inicial, E=entradas, F=salidas, G=stock, H=min, I=max)
+    const resp = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_PAPELES,
+      range: 'STOCK!A2:I200'
+    });
+    const rows = resp.result.values || [];
+    // Map rows to inventory items
+    const newInv = rows.filter(r => r[0] || r[1]).map((r, i) => {
+      const existing = DB.inv.find(x => x.codigo === (r[0]||'').trim());
+      return {
+        id: existing ? existing.id : 'S'+(i+1).toString().padStart(3,'0'),
+        codigo: (r[0]||'').trim(),
+        nombre: (r[1]||'').trim(),
+        tipo: existing ? existing.tipo : 'papel',
+        stock: parseFloat(r[6])||0,
+        min: r[7] && r[7]!=='NO' ? parseFloat(r[7])||0 : 0,
+        unidad: 'tabloides',
+        proveedor: existing ? existing.proveedor : '',
+        costo: existing ? existing.costo : '',
+        notas: existing ? existing.notas : '',
+        ts: 'sync ' + new Date().toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})
+      };
+    }).filter(x => x.nombre);
+    
+    if (!newInv.length) {
+      alert('No se encontraron datos en la pestaña STOCK del Sheet. Verifica que la pestaña se llame exactamente "STOCK".');
+      return;
+    }
+    
+    // Merge: keep non-paper items, replace paper items from sheet
+    const nonPaper = DB.inv.filter(x => x.tipo !== 'papel');
+    DB.inv = [...nonPaper, ...newInv];
+    save(); updateBadges(); renderPage(currentPage);
+    const syncTime = new Date().toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    document.getElementById('sync-status').textContent = 'Última sync: ' + syncTime;
+    alert('Sincronizado: ' + newInv.length + ' sustratos importados desde Google Sheets');
+  } catch(e) {
+    console.error(e);
+    alert('Error al sincronizar: ' + (e.result?.error?.message || e.message || 'Error desconocido') + '\n\nVerifica que la pestaña se llame "STOCK" y que tengas acceso al archivo.');
+  } finally {
+    btn.textContent = '⟳ Sincronizar Sheets';
+    btn.disabled = false;
+  }
+}
+
+async function pushStockToSheet(item) {
+  // When stock is updated in app, push to sheet
+  if (!access_token || item.tipo !== 'papel') return;
+  try {
+    // Find row by codigo in STOCK sheet
+    const resp = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_PAPELES,
+      range: 'STOCK!A2:A200'
+    });
+    const rows = resp.result.values || [];
+    const rowIdx = rows.findIndex(r => (r[0]||'').trim() === item.codigo);
+    if (rowIdx < 0) return; // Not found, skip
+    // Update stock column G (index 6), row = rowIdx + 2 (1-indexed + header)
+    const range = `STOCK!G${rowIdx+2}`;
+    await gapi.client.sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_PAPELES,
+      range,
+      valueInputOption: 'RAW',
+      resource: { values: [[item.stock]] }
+    });
+  } catch(e) { console.warn('No se pudo actualizar Sheet:', e.message); }
+}
+
+// ── INIT ──
+document.getElementById('topWeek').textContent = getWeek();
+document.getElementById('log-week-label') && (document.getElementById('log-week-label').textContent = getWeek());
+document.getElementById('dash-week') && (document.getElementById('dash-week').textContent = getWeek());
+updateBadges();
+renderDash();
+</script>
+</body>
+</html>
